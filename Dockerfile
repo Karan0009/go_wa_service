@@ -28,7 +28,7 @@ WORKDIR /opt/wa_bot_service
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /wa_bot_service_build /wa_bot_service_build
-RUN go install github.com/air-verse/air@latest
 
-CMD ["air", "-d"]
-# CMD ["/wa_bot_service_build"]
+# RUN go install github.com/air-verse/air@latest
+# CMD ["air", "-d"]
+CMD ["/wa_bot_service_build"]
