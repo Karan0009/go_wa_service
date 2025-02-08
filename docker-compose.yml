@@ -13,7 +13,7 @@ services:
     volumes:
       - .:/opt/wa_bot_service
       # :/opt/wa_bot_service/data
-      - media_storage:/opt/media_storage
+      - ../media_storage:/opt/media_storage
     networks:
       - em_services_network
 
