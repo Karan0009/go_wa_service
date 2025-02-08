@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 	"wa_bot_service/config"
 	"wa_bot_service/db/models"
 	logging "wa_bot_service/modules/logger"
@@ -110,12 +111,28 @@ func (svc *WAClientService) eventHandler(client *whatsmeow.Client, evt interface
 			// TODO: WRITE LIMITER HERE
 
 			svc.logger.Info("jid", "jid", jid)
+			isAashi := user.ID.String() == "fa4ebfb0-aa82-11ef-990b-037e8c7d24b0"
 			// Handle media messages
 			if v.Message.GetImageMessage() != nil {
-				if filePath, err := downloadMedia(client, v.Info.Chat, v.Message.GetImageMessage(), "image"); err != nil {
-					if user.ID.String() == "fa4ebfb0-aa82-11ef-990b-037e8c7d24b0" {
+				var mediaType = "raw_transaction"
+				if isAashi {
+					mediaType = "raw_question"
+				}
+				filePath, downloadMediaError := downloadMedia(client, v.Info.Chat, v.Message.GetImageMessage(), mediaType)
+				if downloadMediaError == nil {
+					keyword := "uploads/"
+					index := strings.Index(*filePath, keyword)
+					var formattedFilePath string
+					if index != -1 {
+						str := *filePath
+						formattedFilePath = str[index:]
+					} else {
+						// todo: do better handling
+						fmt.Println("Keyword not found in path")
+					}
+					if isAashi {
 						// todo: add test series message handler
-						if err := svc.testSeriesMessageHandler(true, *filePath); err != nil {
+						if err := svc.testSeriesMessageHandler(true, &formattedFilePath); err == nil {
 							if transactions, ok := WAMessageTemplates["transactions"].(map[string]string); ok {
 								svc.SendMessage(fullPhoneNumber, transactions["invalid_input"])
 								return
@@ -126,7 +143,7 @@ func (svc *WAClientService) eventHandler(client *whatsmeow.Client, evt interface
 						}
 						return
 					} else {
-						if err := svc.transactionMessageHandler(user, true, msgLowerCase, filePath); err != nil {
+						if err := svc.transactionMessageHandler(user, true, msgLowerCase, &formattedFilePath); err != nil {
 							if transactions, ok := WAMessageTemplates["transactions"].(map[string]string); ok {
 								svc.SendMessage(fullPhoneNumber, transactions["invalid_input"])
 								return
@@ -155,7 +172,7 @@ func (svc *WAClientService) eventHandler(client *whatsmeow.Client, evt interface
 					}
 				}
 			} else if msgLowerCase != "" {
-				if err := svc.transactionMessageHandler(user, false, msgLowerCase, nil); err != nil {
+				if err := svc.transactionMessageHandler(user, false, msgLowerCase, nil); err == nil {
 					if transactions, ok := WAMessageTemplates["transactions"].(map[string]string); ok {
 						svc.SendMessage(fullPhoneNumber, transactions["invalid_input"])
 						return
@@ -196,11 +213,14 @@ func (svc *WAClientService) eventHandler(client *whatsmeow.Client, evt interface
 	}
 }
 
-func (svc *WAClientService) testSeriesMessageHandler(hasMedia bool, filePath string) error {
+func (svc *WAClientService) testSeriesMessageHandler(hasMedia bool, filePath *string) error {
+	if filePath == nil {
+		return fmt.Errorf("nil filePath")
+	}
 	testSeriesRawQuestionService := test_series_raw_question_service.NewTestSeriesRawQuestionService()
 	data := "no-media"
 	if hasMedia {
-		data = filePath
+		data = *filePath
 	}
 	_, err := testSeriesRawQuestionService.CreateTestSeriesRawQuestion(data)
 
@@ -208,6 +228,9 @@ func (svc *WAClientService) testSeriesMessageHandler(hasMedia bool, filePath str
 }
 
 func (svc *WAClientService) transactionMessageHandler(user *models.User, hasMedia bool, messageText string, filePath *string) error {
+	if hasMedia && filePath == nil {
+		return fmt.Errorf("nil filePath")
+	}
 	rawTransactionService := raw_transaction_service.NewRawTransactionService()
 	rawTransactionType := models.RawTransactionType.WAText
 	if hasMedia {
@@ -230,13 +253,13 @@ func (svc *WAClientService) transactionMessageHandler(user *models.User, hasMedi
 	return err
 }
 
-func downloadMedia(client *whatsmeow.Client, chat types.JID, media interface{}, mediaType string) (*string, error) {
+func downloadMedia(client *whatsmeow.Client, chat types.JID, media interface{}, mediaPurpose string) (*string, error) {
 	var fileExtension string
 	var downloadable whatsmeow.DownloadableMessage
 
 	switch m := media.(type) {
 	case *waE2E.ImageMessage:
-		fileExtension = ".jpg"
+		fileExtension = ".jpeg"
 		downloadable = m
 	case *waE2E.VideoMessage:
 		fileExtension = ".mp4"
@@ -255,12 +278,17 @@ func downloadMedia(client *whatsmeow.Client, chat types.JID, media interface{}, 
 	// Create a file to save the media
 	mediaStoragePath := config.AppConfig.MEDIA_UPLOAD_PATH
 	uploadsFolderPath := fmt.Sprintf("%s/uploads", mediaStoragePath)
-	err := utils.EnsureDirExists(uploadsFolderPath)
+	absFolderPath, absFolderPathErr := filepath.Abs(uploadsFolderPath)
+	if absFolderPathErr != nil {
+		fmt.Println("Failed to get absolute path:", absFolderPathErr)
+		return nil, fmt.Errorf("failed to get absolute path: %v", absFolderPathErr)
+	}
+	err := utils.EnsureDirExists(absFolderPath)
 	if err != nil {
 		fmt.Println("Failed to create folder:", err)
 		return nil, fmt.Errorf("failed to create folder: %v", err)
 	}
-	fileName := fmt.Sprintf("%s/%s_%s%s", uploadsFolderPath, chat.User, mediaType, fileExtension)
+	fileName := fmt.Sprintf("%s/%d_%s_%s%s", uploadsFolderPath, time.Now().UnixMilli(), mediaPurpose, chat.User, fileExtension)
 	file, err := os.Create(fileName)
 	if err != nil {
 		fmt.Println("Failed to create file:", err)
@@ -275,7 +303,7 @@ func downloadMedia(client *whatsmeow.Client, chat types.JID, media interface{}, 
 		return nil, fmt.Errorf("failed to download media: %v", err)
 	}
 
-	fmt.Printf("Downloaded %s: %s\n", mediaType, fileName)
+	fmt.Printf("Downloaded %s: %s\n", mediaPurpose, fileName)
 	return &fileName, nil
 }
 

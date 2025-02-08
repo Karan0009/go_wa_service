@@ -25,7 +25,7 @@ func main() {
 		log.Fatalf("Error initializing DB client: %v", err)
 	}
 	logging.NewLogger("main").Info("Connected to DB")
-	start_wa_client := false
+	start_wa_client := true
 
 	if !start_wa_client {
 		c := make(chan os.Signal, 1)
