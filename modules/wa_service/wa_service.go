@@ -32,7 +32,7 @@ type WAClientService struct {
 }
 
 func NewWAClientService() (*WAClientService, error) {
-	dbLog := waLog.Stdout("Database", "INFO", true)
+	dbLog := waLog.Stdout("Database", "ERROR", true)
 	container, err := sqlstore.New("sqlite3", "file:wa_service_datastore.db?_foreign_keys=on", dbLog)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func NewWAClientService() (*WAClientService, error) {
 		return nil, err
 	}
 
-	clientLog := waLog.Stdout("Client", "INFO", true)
+	clientLog := waLog.Stdout("Client", "ERROR", true)
 	client := whatsmeow.NewClient(session, clientLog)
 
 	return &WAClientService{client: client, logger: logging.NewLogger("wa_service")}, nil
@@ -132,7 +132,7 @@ func (svc *WAClientService) eventHandler(client *whatsmeow.Client, evt interface
 					}
 					if isAashi {
 						// todo: add test series message handler
-						if err := svc.testSeriesMessageHandler(true, &formattedFilePath); err == nil {
+						if err := svc.testSeriesMessageHandler(true, &formattedFilePath); err != nil {
 							if transactions, ok := WAMessageTemplates["transactions"].(map[string]string); ok {
 								svc.SendMessage(fullPhoneNumber, transactions["invalid_input"])
 								return
@@ -172,7 +172,7 @@ func (svc *WAClientService) eventHandler(client *whatsmeow.Client, evt interface
 					}
 				}
 			} else if msgLowerCase != "" {
-				if err := svc.transactionMessageHandler(user, false, msgLowerCase, nil); err == nil {
+				if err := svc.transactionMessageHandler(user, false, msgLowerCase, nil); err != nil {
 					if transactions, ok := WAMessageTemplates["transactions"].(map[string]string); ok {
 						svc.SendMessage(fullPhoneNumber, transactions["invalid_input"])
 						return
