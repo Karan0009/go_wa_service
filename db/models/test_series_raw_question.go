@@ -20,6 +20,7 @@ var TestSeriesRawQuestionStatuses = struct {
 
 // TestSeriesRawQuestion represents the model for test series raw questions
 type TestSeriesRawQuestion struct {
+	*gorm.Model
 	ID              uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
 	RawQuestionData string    `gorm:"type:text;not null" json:"raw_question_data"`
 	QuestionID      *int64    `gorm:"type:bigint;null" json:"question_id"`
