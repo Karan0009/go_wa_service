@@ -20,12 +20,15 @@ func GetMyWaGrpcServiceServer() *MyWaGrpcServiceServer {
 func (s *MyWaGrpcServiceServer) SendOtpMessage(
 	ctx context.Context,
 	req *wa_grpc_service.SendOtpRequest) (*wa_grpc_service.SendOtpResponse, error) {
-	otpMessage := *req.GetData()
+	otpMessage := req.Data
+	if otpMessage == nil {
+		return &wa_grpc_service.SendOtpResponse{StatusCode: codes.InvalidArgument.String(), Success: false, Data: fmt.Sprintf("%v", "service_name, phone_number and otp_code cannot be empty")}, nil
+	}
 	if len(otpMessage.PhoneNumber) != 12 {
-		return &wa_grpc_service.SendOtpResponse{StatusCode: codes.InvalidArgument.String(), Success: false, Data: fmt.Sprintf("%v", "phone must be prefixed with 91")}, nil
+		return &wa_grpc_service.SendOtpResponse{StatusCode: codes.InvalidArgument.String(), Success: false, Data: fmt.Sprintf("%v", "phone_number must be prefixed with 91")}, nil
 	}
 	if len(otpMessage.OtpCode) == 0 {
-		return &wa_grpc_service.SendOtpResponse{StatusCode: codes.InvalidArgument.String(), Success: false, Data: fmt.Sprintf("%v", "otp code cannot be empty")}, nil
+		return &wa_grpc_service.SendOtpResponse{StatusCode: codes.InvalidArgument.String(), Success: false, Data: fmt.Sprintf("%v", "otp_code cannot be empty")}, nil
 	}
 	waClient, waClientErr := wa_service.GetWaClient()
 	if waClientErr != nil {
