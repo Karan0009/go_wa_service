@@ -1,5 +1,7 @@
 package wa_service
 
+import "fmt"
+
 var WAMessageTemplates = map[string]interface{}{
 	"defaultMessage": `*Hey, please send any of the following options*
     *1. Register yourself in the app*
@@ -28,4 +30,8 @@ After registering you can start sending your transactions by following ways:
 	"testSeries": map[string]string{
 		"input_received": `Added ✅`,
 	},
+}
+
+func GetOtpMessage(otpCode string) string {
+	return fmt.Sprintf("Login Code for expense manager is **%s**\nValid for 15 minutes", otpCode)
 }
