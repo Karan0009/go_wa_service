@@ -1,12 +1,15 @@
-module wa_bot_service
+module github.com/Karan0009/go_wa_bot
 
 go 1.23.5
 
 require (
 	go.mau.fi/whatsmeow v0.0.0-20250204095649-a75587ab11d7
+	google.golang.org/grpc v1.70.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 )
+
+require google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 
 require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -35,5 +38,5 @@ require (
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
-	google.golang.org/protobuf v1.36.4 // indirect
+	google.golang.org/protobuf v1.36.5
 )

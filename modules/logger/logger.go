@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"wa_bot_service/config"
+
+	"github.com/Karan0009/go_wa_bot/config"
 )
 
 // NewLogger creates and initializes a new logger instance with a label.

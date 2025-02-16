@@ -22,6 +22,8 @@ type Config struct {
 	PGDBConnection    PGDBConnection
 	APP_ENV           string
 	MEDIA_UPLOAD_PATH string
+	GRPC_SERVER_PORT  string
+	START_WA_CLIENT   bool
 }
 
 // LoadConfig initializes the AppConfig global variable with values from environment variables
@@ -42,7 +44,9 @@ func LoadConfig() error {
 			SSL:      getEnv("PG_DB_SSL_MODE", "false"),
 		},
 		APP_ENV:           getEnv("APP_ENV", "development"),
-		MEDIA_UPLOAD_PATH: "/opt/media_storage",
+		MEDIA_UPLOAD_PATH: "../media_storage",
+		GRPC_SERVER_PORT:  getEnv("GRPC_SERVER_PORT", "8088"),
+		START_WA_CLIENT:   true,
 	}
 	return nil
 }

@@ -3,8 +3,8 @@ package db_service
 import (
 	"fmt"
 	"log"
-	"wa_bot_service/config"
 
+	"github.com/Karan0009/go_wa_bot/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

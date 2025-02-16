@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"wa_bot_service/config"
-	"wa_bot_service/db/models"
-	logging "wa_bot_service/modules/logger"
-	"wa_bot_service/modules/utils"
-	"wa_bot_service/services/raw_transaction_service"
-	test_series_raw_question_service "wa_bot_service/services/test_series_service"
-	"wa_bot_service/services/user_service"
 
+	"github.com/Karan0009/go_wa_bot/config"
+	"github.com/Karan0009/go_wa_bot/db/models"
+	logging "github.com/Karan0009/go_wa_bot/modules/logger"
+	"github.com/Karan0009/go_wa_bot/modules/utils"
+	"github.com/Karan0009/go_wa_bot/services/raw_transaction_service"
+	test_series_raw_question_service "github.com/Karan0009/go_wa_bot/services/test_series_service"
+	"github.com/Karan0009/go_wa_bot/services/user_service"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal"
 	"go.mau.fi/whatsmeow"
@@ -31,6 +31,8 @@ type WAClientService struct {
 	logger *slog.Logger
 }
 
+var waClientService *WAClientService
+
 func NewWAClientService() (*WAClientService, error) {
 	dbLog := waLog.Stdout("Database", "ERROR", true)
 	container, err := sqlstore.New("sqlite3", "file:wa_service_datastore.db?_foreign_keys=on", dbLog)
@@ -44,8 +46,15 @@ func NewWAClientService() (*WAClientService, error) {
 
 	clientLog := waLog.Stdout("Client", "ERROR", true)
 	client := whatsmeow.NewClient(session, clientLog)
+	waClientService = &WAClientService{client: client, logger: logging.NewLogger("wa_service")}
+	return waClientService, nil
+}
 
-	return &WAClientService{client: client, logger: logging.NewLogger("wa_service")}, nil
+func GetWaClient() (*WAClientService, error) {
+	if waClientService == nil {
+		return nil, fmt.Errorf("wa client not initialized")
+	}
+	return waClientService, nil
 }
 
 func (svc *WAClientService) Start() error {

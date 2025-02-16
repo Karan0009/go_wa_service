@@ -2,10 +2,9 @@ package test_series_raw_question_service
 
 import (
 	"errors"
-	"wa_bot_service/db/models"
 
-	db_service "wa_bot_service/modules/db"
-
+	"github.com/Karan0009/go_wa_bot/db/models"
+	db_service "github.com/Karan0009/go_wa_bot/modules/db"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
