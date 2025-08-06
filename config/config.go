@@ -44,7 +44,7 @@ func LoadConfig() error {
 			SSL:      getEnv("PG_DB_SSL_MODE", "false"),
 		},
 		APP_ENV:           getEnv("APP_ENV", "development"),
-		MEDIA_UPLOAD_PATH: "../media_storage",
+		MEDIA_UPLOAD_PATH: getEnv("MEDIA_UPLOAD_PATH", "../media_storage"),
 		GRPC_SERVER_PORT:  getEnv("GRPC_SERVER_PORT", "8088"),
 		START_WA_CLIENT:   true,
 	}
