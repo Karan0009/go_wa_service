@@ -35,11 +35,11 @@ var waClientService *WAClientService
 
 func NewWAClientService() (*WAClientService, error) {
 	dbLog := waLog.Stdout("Database", "ERROR", true)
-	container, err := sqlstore.New("sqlite3", "file:wa_service_datastore.db?_foreign_keys=on", dbLog)
+	container, err := sqlstore.New(context.Background(), "sqlite3", "file:wa_service_datastore.db?_foreign_keys=on", dbLog)
 	if err != nil {
 		return nil, err
 	}
-	session, err := container.GetFirstDevice()
+	session, err := container.GetFirstDevice(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,6 @@ func (svc *WAClientService) eventHandler(client *whatsmeow.Client, evt interface
 							svc.logger.Error("transactions template is not a map[string]string")
 							return
 						}
-						// todo: add transaction message handler
 					}
 
 				} else {
@@ -306,7 +305,7 @@ func downloadMedia(client *whatsmeow.Client, chat types.JID, media interface{}, 
 	defer file.Close()
 
 	// Download the media file using DownloadToFile
-	err = client.DownloadToFile(downloadable, file)
+	err = client.DownloadToFile(context.Background(), downloadable, file)
 	if err != nil {
 		fmt.Println("Failed to download media:", err)
 		return nil, fmt.Errorf("failed to download media: %v", err)
